@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 
 import { BooksModule } from './books/books.module';
 import { DatabaseModule } from './config/database/database.module';
+import { OutletsModule } from './outlet/outlet.module';
 
 
 @Module({
@@ -10,7 +11,8 @@ import { DatabaseModule } from './config/database/database.module';
   imports: [
     BooksModule,
     DatabaseModule,
-    AuthModule
+    AuthModule,
+    OutletsModule
   ]
 })
 export class AppModule {}
