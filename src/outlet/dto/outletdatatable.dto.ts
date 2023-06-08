@@ -5,7 +5,7 @@ import { OutletFilter, OutletOrderBy } from "./Outlet.dto";
 import { empty } from "rxjs";
 import { Outlet } from "../entities/Outlet.entity";
 
-export class OutletDatatableDTO {
+export class DatatableDTO {
     
     @ApiPropertyOptional({
         description: 'Limit data to show',
@@ -16,7 +16,7 @@ export class OutletDatatableDTO {
     @IsOptional()
     @IsInt()
     @Max(100)
-    take: number;
+    limit: number;
 
     @Transform(({ value }) => parseInt(value))
     @ApiPropertyOptional({
@@ -40,6 +40,8 @@ export class OutletDatatableDTO {
     })
     @IsOptional()
     Filter:OutletFilter;
+
+    data: any;
 
 }
 

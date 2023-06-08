@@ -6,9 +6,16 @@ import { ValidationPipe } from '@nestjs/common';
 
 
 async function bootstrap() {
+
+
   const app = await NestFactory.create(AppModule);
    app.useGlobalPipes(new ValidationPipe());
 
+   app.enableCors({
+    origin:true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+});
 
   const config = new DocumentBuilder()
     .setTitle('Books Api Example')
@@ -18,7 +25,7 @@ async function bootstrap() {
     .build();
     
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/', app, document);
+  SwaggerModule.setup('/swagger', app, document);
 
   app.listen(app.get(ConfigService).getInt('APP_PORT'), '0.0.0.0', () => {
     console.log('Listening to port:  ' + app.get(ConfigService).getInt('APP_PORT'));

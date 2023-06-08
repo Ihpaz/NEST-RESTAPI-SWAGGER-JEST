@@ -2,15 +2,21 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OutletsController } from './outlet.controller';
 import { Outlet } from './entities/Outlet.entity';
-import { OutletsService } from './outlet.service';
+import {OutletsService } from './outlet.service';
 import { AuthModule } from 'src/auth/auth.module';
+import { District } from './entities/district.entity';
+import { Employee } from './entities/employee.entity';
+
+import { GoodsController } from 'src/outlet-goods/outlet-goods.controller';
+import { Goods } from 'src/outlet-goods/entities/goods.entity';
+import { GoodsService } from 'src/outlet-goods/outlet-goods.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Outlet]),
+    TypeOrmModule.forFeature([Outlet,District,Employee,Goods]),
     AuthModule
   ],
-  controllers: [OutletsController],
-  providers: [OutletsService]
+  controllers: [OutletsController,GoodsController],
+  providers: [OutletsService,GoodsService]
 })
 export class OutletsModule {}

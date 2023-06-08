@@ -40,6 +40,22 @@ export class OutletDto {
     @IsString()
     @IsNotEmpty()
     @MaxLength(255)
+    Address:string;
+
+    @ApiProperty({
+        maxLength:255
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(255)
+    Ownership:string;
+
+    @ApiProperty({
+        maxLength:255
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(255)
     DistrictArea:string;
 
 
@@ -55,12 +71,20 @@ export class OutletDto {
         maxLength:255
     })
     @IsString()
+    @MaxLength(255)
+    OutletMallType:string;
+
+    @ApiProperty({
+        maxLength:255
+    })
+    @IsString()
     @IsNotEmpty()
     @MaxLength(255)
     OutletStatus:string;
 
-
-
+    @ApiProperty()
+    @IsArray()
+    Employee:any[];
 }
 
 
