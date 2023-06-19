@@ -10,13 +10,15 @@ import { Employee } from './entities/employee.entity';
 import { GoodsController } from 'src/outlet-goods/outlet-goods.controller';
 import { Goods } from 'src/outlet-goods/entities/goods.entity';
 import { GoodsService } from 'src/outlet-goods/outlet-goods.service';
+import { GoodsOutlet } from 'src/outlet-goods/entities/goodsoutlet.entity';
+import { QueryHelper } from 'src/helpers/query.helper';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Outlet,District,Employee,Goods]),
+    TypeOrmModule.forFeature([Outlet,District,Employee,Goods,GoodsOutlet]),
     AuthModule
   ],
   controllers: [OutletsController,GoodsController],
-  providers: [OutletsService,GoodsService]
+  providers: [OutletsService,GoodsService,QueryHelper]
 })
 export class OutletsModule {}

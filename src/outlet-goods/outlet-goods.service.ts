@@ -1,17 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
-
+import { Like, Repository, getConnection, getConnectionManager } from 'typeorm';
 import { Workbook, stream } from 'exceljs';
-import * as tmp from 'tmp';
-import { writeFile } from 'fs/promises';
-import { promises } from 'dns';
-import { rejects } from 'assert';
-
 import { Goods } from './entities/goods.entity';
 import { DatatableDTO } from 'src/outlet/dto/Outletdatatable.dto';
 import { Outlet } from 'src/outlet/entities/Outlet.entity';
 import { GoodsDto } from './dto/goods.dto';
+import { Config } from 'src/helpers/config.helper';
+import { join } from 'path';
+import { createAutoNumber } from 'src/helpers/generate.helper';
+import { GoodsOutlet } from './entities/goodsoutlet.entity';
+import { GoodsOutletDto } from './dto/goodsoutlet.dto';
+import { QueryHelper } from 'src/helpers/query.helper';
 
 
 @Injectable()
@@ -22,15 +22,18 @@ export class GoodsService {
     private GoodsRepository: Repository<Goods>,
     @InjectRepository(Outlet)
     private OutletRepository: Repository<Outlet>,
+    @InjectRepository(GoodsOutlet)
+    private GoodsOutletRepository: Repository<GoodsOutlet>,
+    private _queryHelper:QueryHelper,
   ){}
   
- async create(dto: GoodsDto) {
+  async create(dto: GoodsDto) {
     await this.GoodsRepository.save(dto)
 
     return dto;
- }
+  }
 
- async findAllOutletAsset(dto:DatatableDTO) {
+  async findAllOutletAsset(dto:DatatableDTO) {
 
   let param={};
   const limit=dto.limit  && +dto.limit > 0  ? dto.limit   : 10;
@@ -51,11 +54,11 @@ export class GoodsService {
       }
   }
 
-  param['relations']=['goods'];
+  param['relations']=['goodsOutlet'];
   const [data, total]= await this.OutletRepository.findAndCount(param);
 
   for(const dtOutlet of data){
-    dtOutlet['AssetTotal']=dtOutlet.goods.length;
+    dtOutlet['AssetTotal']=dtOutlet.goodsOutlet.length;
   }
 
 
@@ -66,7 +69,7 @@ export class GoodsService {
     skip: +skip
   };
 
-}
+  }
 
   async findAll(dto:DatatableDTO) {
 
@@ -104,7 +107,7 @@ export class GoodsService {
   async findOne(id: number) {
     const data= await this.GoodsRepository.findOne({where:{
       id:id,} 
-    })
+    });
 
     if(!data) throw new NotFoundException();
 
@@ -112,7 +115,7 @@ export class GoodsService {
   }
 
 
- async update(id: number, dto: GoodsDto) {
+  async update(id: number, dto: GoodsDto) {
     //throw error when not exist
     const params={};
 
@@ -155,17 +158,13 @@ export class GoodsService {
     return result;
   }
 
-
-
-
   async findAllGoods(filter: any={}){
-
+    console.log(filter,'data')
     const data=await this.GoodsRepository.find(filter);
-
+  
     return data;
   }
 
-  
   async findAllGoodsDatatable(dto:DatatableDTO) {
 
     let param={};
@@ -206,11 +205,15 @@ export class GoodsService {
     let book= new Workbook();
 
     let worksheet = book.addWorksheet(`sheet1`);
+   
+
     const headerRow = worksheet.getRow(1);
-    headerRow.getCell(1).value = 'GoodsName';
-    headerRow.getCell(2).value = 'Specification';
-    headerRow.getCell(3).value = 'Qty';
+    headerRow.getCell(1).value = 'GoodsId';
+    headerRow.getCell(2).value = 'GoodsName';
+    headerRow.getCell(3).value = 'Specification';
+    headerRow.getCell(4).value = 'Qty';
   
+    
 
     headerRow.eachCell((cell) => {
       cell.fill = {
@@ -226,16 +229,25 @@ export class GoodsService {
 
     // Write data to the worksheet
     data.forEach((row, index) => {
-      
-      worksheet.getCell(`A${index + 2}`).value = row.GoodsName;
-      worksheet.getCell(`B${index + 2}`).value = row.Specification;
-      worksheet.getCell(`C${index + 2}`).value = 0;
+
+      worksheet.getCell(`A${index + 2}`).value = row.id;
+      worksheet.getCell(`B${index + 2}`).value = row.GoodsName;
+      worksheet.getCell(`C${index + 2}`).value = row.Specification;
+      worksheet.getCell(`D${index + 2}`).value = 0;
      
       // Add more columns as needed
     });
 
-   
+    
 
+    worksheet.protect('sevenretail123',{selectLockedCells:true,formatCells:true,formatColumns:true});
+
+    const column = worksheet.getColumn(4);
+    column.eachCell((cell) => {
+      cell.protection = {
+        locked: false
+      };
+    });
 // write to a new buffer
     const buffer = await book.xlsx.writeBuffer();
     
@@ -249,9 +261,11 @@ export class GoodsService {
 
     let worksheet = book.addWorksheet(`sheet1`);
     const headerRow = worksheet.getRow(1);
-    headerRow.getCell(1).value = 'GoodsName';
-    headerRow.getCell(2).value = 'Specification';
-    headerRow.getCell(3).value = 'Qty';
+    headerRow.getCell(1).value = 'GoodsId';
+    headerRow.getCell(2).value = 'GoodsName';
+    headerRow.getCell(3).value = 'Specification';
+    headerRow.getCell(4).value = 'Qty';
+  
   
 
     headerRow.eachCell((cell) => {
@@ -269,19 +283,216 @@ export class GoodsService {
     // Write data to the worksheet
     data.forEach((row, index) => {
       
-      worksheet.getCell(`A${index + 2}`).value = row.GoodsName;
-      worksheet.getCell(`B${index + 2}`).value = row.Specification;
-      worksheet.getCell(`C${index + 2}`).value = 0;
+      worksheet.getCell(`A${index + 2}`).value = row.id;
+      worksheet.getCell(`B${index + 2}`).value = row.GoodsName;
+      worksheet.getCell(`C${index + 2}`).value = row.Specification;
+      worksheet.getCell(`D${index + 2}`).value = 0;
      
-      // Add more columns as needed
     });
 
-   
+    worksheet.protect('sevenretail123',{selectLockedCells:true,formatCells:true,formatColumns:true});
 
-// write to a new buffer
+    const column = worksheet.getColumn(4);
+    column.eachCell((cell) => {
+      cell.protection = {
+        locked: false
+      };
+    });
+    
+    // write to a new buffer
     const buffer = await book.xlsx.writeBuffer();
     
     return buffer
+  }
+
+  async importTemplateAsset(dto:any){
+
+    const resultImport: any = {};
+          resultImport['Result'] = [];
+    
+    const workbook = new Workbook();
+    const pathRaw = join(`${Config.get('FOLDER_UPLOAD')}${Config.get('TEMP_RAW_PATH_FILE')}/`, dto.Attachment);
+
+   await workbook.xlsx.readFile(pathRaw)
+    .then(() => {
+      // Excel file loaded successfully
+      const worksheet = workbook.getWorksheet(1); // Get the first worksheet
+
+  
+      for (let i = 2; i <= worksheet.rowCount; i++) {
+
+          const Id=worksheet.getCell(`A${i}`).value;
+          const GoodsName=worksheet.getCell(`B${i}`).value;
+          const Specification=worksheet.getCell(`C${i}`).value;
+          const Qty=worksheet.getCell(`D${i}`).value;
+
+          for (let x = 1; x <= Number.parseInt(Qty.toString()); x++) {
+            const singleResult: any = {};
+          
+            const autonumber= createAutoNumber(x);
+           
+            singleResult['GoodsId'] = Id;
+            singleResult['GoodsName'] = GoodsName;
+            singleResult['Specification'] = Specification;
+            singleResult['AssetId'] = `${GoodsName}-${dto.CodeOutlet}-${autonumber}`;
+            resultImport['Result'].push(singleResult);
+            
+          }
+
+         
+      }
+
+    
+     
+    })
+    .catch((error) => {
+      // Error occurred while loading the Excel file
+      console.log('Error:', error);
+    });
+    
+    return resultImport;
+  }
+
+  async importTemplateInventory(dto:any){
+
+    const resultImport: any = {};
+          resultImport['Result'] = [];
+    
+    const workbook = new Workbook();
+    const pathRaw = join(`${Config.get('FOLDER_UPLOAD')}${Config.get('TEMP_RAW_PATH_FILE')}/`, dto.Attachment);
+
+    await workbook.xlsx.readFile(pathRaw)
+      .then(() => {
+        // Excel file loaded successfully
+        const worksheet = workbook.getWorksheet(1); // Get the first worksheet
+
+    
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+            const singleResult: any = {};
+
+            const Id=worksheet.getCell(`A${i}`).value;
+            const GoodsName=worksheet.getCell(`B${i}`).value;
+            const Specification=worksheet.getCell(`C${i}`).value;
+            const Qty=worksheet.getCell(`D${i}`).value;
+
+          
+            if(Qty==0){
+              break;
+            }else{
+              singleResult['GoodsId'] = Id;
+              singleResult['GoodsName'] = GoodsName;
+              singleResult['Specification'] = Specification;
+              singleResult['Qty'] = Qty;
+              resultImport['Result'].push(singleResult);
+            }
+          
+        }
+      
+      })
+      .catch((error) => {
+        // Error occurred while loading the Excel file
+        console.log('Error:', error);
+    });
+    
+    return resultImport;
+  }
+
+  async createOutletGoods(dto:GoodsOutletDto){
+    const queryRunner = this._queryHelper.queryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+       
+      console.log(dto,'goods')
+        if(dto.Asset){
+          await queryRunner.manager.delete('GoodsOutlet',{OutletId:dto.OutletId,GoodsType:'ASSET'});
+          for(const dt of dto.Asset){
+           
+  
+            const params={};
+            params['OutletId']=dto.OutletId;
+            params['GoodsId']=dt.GoodsId;
+            params['GoodsName']=dt.GoodsName;
+            params['Specification']=dt.Specification;
+            params['AssetId']=dt.AssetId;
+            params['GoodsType']='ASSET';
+           
+            await queryRunner.manager.save('GoodsOutlet',params);
+          }
+        }
+        
+        if(dto.Inventory){
+          await queryRunner.manager.delete('GoodsOutlet',{OutletId:dto.OutletId,GoodsType:'INVENTORY'});
+          for(const dti of dto.Inventory){
+           
+
+            const params={};
+            params['OutletId']=dto.OutletId;
+            params['AssetId']=0;
+            params['GoodsId']=dti.GoodsId;
+            params['GoodsName']=dti.GoodsName;
+            params['Specification']=dti.Specification;
+            params['Qty']=dti.Qty;
+            params['GoodsType']='INVENTORY';
+            await queryRunner.manager.save('GoodsOutlet',params);
+          }
+       }
+       
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw new Error(error.message);
+    } finally {
+        await queryRunner.release();
+    }
+  }
+
+  async generateCodeAsset(dto:any){
+
+    const result: any = {};
+    result['Asset'] = [];
+    let prefix:string='';
+
+    const data= await this._queryHelper.getOne(`
+      SELECT 
+        RIGHT(AssetID, 3)  AS AssetPrefix
+      FROM goods_outlet
+      WHERE 
+          OutletId=:OutletId AND
+          GoodsId=:GoodsId
+      ORDER BY RIGHT(AssetID, 3) DESC
+    `,{
+      OutletId:dto.OutletId,
+      GoodsId:dto.GoodsId
+    });
+ 
+    for(let x=1;x <= dto.Qty;x++){
+
+      if(!data){
+         prefix=createAutoNumber(x);
+      }else{
+         prefix=createAutoNumber(parseInt(data.AssetPrefix));
+      }
+
+      const params={};
+      
+
+      params['CodeOutlet']=dto.CodeOutlet;
+      params['AssetId']=`${dto.GoodsName}-${dto.CodeOutlet}-${prefix}`;
+      params['GoodsId']=dto.GoodsId;
+      params['GoodsName']=dto.GoodsName;
+      params['Specification']=dto.Specification;
+      params['GoodsType']='ASSET';
+
+      result['Asset'].push(params);
+    }
+
+    
+    // await this.createOutletGoods(result);
+
+    return  result['Asset'];
   }
 
  

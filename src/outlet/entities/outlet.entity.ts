@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { Employee } from './employee.entity';
 import { Goods } from 'src/outlet-goods/entities/goods.entity';
+import { GoodsOutlet } from 'src/outlet-goods/entities/goodsoutlet.entity';
+import { RoleOutlet } from 'src/userrole/entities/roleoutlet.entity';
 
 
 @Entity()
@@ -53,10 +55,16 @@ export class Outlet {
   @OneToMany(() => Employee, employee => employee.outlet)
   employee: Employee[];
 
-  @ManyToMany(() => Goods, goods => goods.outlet, { cascade: true })
-  @JoinTable({ name: 'assetoutlet' })
-  goods: Goods[];
+  // @ManyToMany(() => Goods, goods => goods.outlet)
+  // @JoinTable()
+  // goods: Goods[];
 
+  @OneToMany(() => GoodsOutlet, goodsOutlet => goodsOutlet.outlet)
+  goodsOutlet: GoodsOutlet[];
+
+  
+  @OneToMany(() => RoleOutlet, roleOutlet => roleOutlet.outlet)
+  roleOutlet: RoleOutlet[];
 
   @ApiProperty()
   @CreateDateColumn()

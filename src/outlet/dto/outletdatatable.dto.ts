@@ -30,8 +30,7 @@ export class DatatableDTO {
         description: 'Order By Field',
         default: ''
     })
-    @ValidateNested()
-    orderBy: OutletOrderBy;
+    orderBy: any;
 
 
     @ApiPropertyOptional({
@@ -39,7 +38,7 @@ export class DatatableDTO {
         default: ''
     })
     @IsOptional()
-    Filter:OutletFilter;
+    filter:any;
 
     data: any;
 

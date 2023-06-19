@@ -36,3 +36,6 @@ lerna-debug.log*
 
 #file
 .env
+uploadTemp/Doc/20230608_133650.xlsx
+uploadTemp
+uploadDoc

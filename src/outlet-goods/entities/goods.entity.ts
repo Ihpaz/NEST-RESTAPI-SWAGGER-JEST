@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Outlet } from 'src/outlet/entities/Outlet.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, OneToMany } from 'typeorm';
+import { GoodsOutlet } from './goodsoutlet.entity';
 
 @Entity()
 export class Goods {
@@ -20,8 +21,11 @@ export class Goods {
   @Column()
   GoodsType: string;
    
-  @ManyToMany(() => Outlet, outlet => outlet.goods)
-  outlet: Outlet[];
+  // @ManyToMany(() => Outlet, outlet => outlet.goods)
+  // outlet: Outlet[];
+
+  @OneToMany(() => GoodsOutlet, goodsOutlet => goodsOutlet.goods)
+  goodsOutlet: GoodsOutlet[];
 
   @ApiProperty()
   @CreateDateColumn()

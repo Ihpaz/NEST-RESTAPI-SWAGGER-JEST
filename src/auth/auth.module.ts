@@ -5,6 +5,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { Config } from '../helpers/config.helper';
 import { AuthController } from './auth.controller';
+import { QueryHelper } from 'src/helpers/query.helper';
+import { MenuService } from 'src/menu/menu.service';
+import { MenuController } from 'src/menu/menu.controller';
 
 @Module({
   imports: [
@@ -14,8 +17,8 @@ import { AuthController } from './auth.controller';
       signOptions: { expiresIn: Config.get('EXPIRED') },
     }),
   ],
-  providers: [AuthService,JwtStrategy],
+  providers: [AuthService,JwtStrategy,QueryHelper,MenuService],
   exports: [AuthService],
-  controllers: [AuthController],
+  controllers: [AuthController,MenuController],
 })
 export class AuthModule {}

@@ -3,6 +3,8 @@ import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiFoundRespo
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { AuthDTO } from './dto/auth.dto';
+import { responseError } from 'src/helpers/response.helper';
+import { response } from 'express';
 
 @ApiTags('Auth')
 @Controller('api/v1/auth')
@@ -41,7 +43,13 @@ export class AuthController {
         }
       },
     })
-    create(@Body() dto: AuthDTO) {
-      return this.authService.generateToken(dto);
+   async  create(@Body() dto: AuthDTO) {
+      try {
+        const data = await  this.authService.login(dto);;
+        return data;
+      } catch (error) {
+        return responseError(error.message);
+      }
+      
     }
 }

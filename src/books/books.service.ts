@@ -28,8 +28,8 @@ export class BooksService {
 
     param['take']=limit;
     param['skip']=skip;
-    param['order']={};
-    param['where']={};
+    param['order']=dto.orderBy;
+    param['where']=dto.Filter;
 
 
     for(let prm in dto){

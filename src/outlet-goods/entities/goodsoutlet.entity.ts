@@ -7,13 +7,25 @@ import { Goods } from './goods.entity';
 @Entity()
 export class GoodsOutlet {
   @PrimaryColumn()
-  outletId: number;
+  OutletId: number;
 
   @PrimaryColumn()
-  goodsId: number;
+  GoodsId: number;
 
   @PrimaryColumn()
-  assetId: number;
+  AssetId: string;
+
+  @ApiProperty()
+  @Column()
+  GoodsName: string;
+
+  @ApiProperty()
+  @Column()
+  Specification: string;
+
+  @ApiProperty()
+  @Column()
+  GoodsType: string;
 
   @ApiProperty()
   @Column()
@@ -22,11 +34,11 @@ export class GoodsOutlet {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @ManyToOne(() => Outlet, outlet => outlet.goods)
-  @JoinColumn({ name: 'outletId' })
+  @ManyToOne(() => Outlet, outlet => outlet.roleOutlet)
+  @JoinColumn({ name: 'OutletId' })
   outlet: Outlet;
 
-  @ManyToOne(() => Goods, goods => goods.outlet)
-  @JoinColumn({ name: 'goodsId' })
+  @ManyToOne(() => Goods, goods => goods.goodsOutlet)
+  @JoinColumn({ name: 'GoodsId' })
   goods: Goods;
 }

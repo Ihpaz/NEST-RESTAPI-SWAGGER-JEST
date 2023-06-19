@@ -84,8 +84,12 @@ export class OutletsController {
     return this.OutletsService.findOne(id);
   }
 
+  @Get('detailgoods/:id')
+  findOneOutletGoods(@Param('id') id: number) {
+    
+    return this.OutletsService.findOneOutletGoods(id);
+  }
 
-   
   @ApiOperation({
     summary:'Update Outlet'
   })

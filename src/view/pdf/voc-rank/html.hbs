@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link` href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+        <title>PDF</title>
+
+        <style>
+          
+             @media print {
+                .is-page {
+                   /* break-inside: avoid;*/
+                }
+            }
+
+            body {
+                font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+                padding: 0 50px;
+            }
+
+            table {
+                width: 100%;
+                font-size: 10px;
+            }
+
+            td>p {
+                margin: 0;
+                padding: 0;
+                font-weight: 600;
+            }
+
+            img {
+                height: 100px;
+                width: 120px;
+            }
+
+            .td-right {
+                text-align: right;
+                vertical-align: middle;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+                /* font-weight: 900; */
+            }
+
+            .content{
+                font-size: 14px;
+            }
+
+             .ttlcontent{
+                font-size: 18px;
+            }
+        </style>
+</head>
+
+<body>
+      {{#each data}}
+    <div class="main is-page">
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <img class="logo" src="{{ this.logo }}" />
+                    </td>
+                    <td class="td-right">
+                        <p class="title">
+                            Rank VOC Negatif
+                        </p>
+                        
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br />
+        <br />
+        <br />
+        <table >
+            <tbody>
+                <tr>
+                    <td class="ttlcontent" colspan="4"><b>Employee List</b></td>
+                </tr>
+                <tr>
+                     <th class="ttlcontent" style="width:5%;text-align:left">No</th>
+                     <th class="ttlcontent" style="width:30%;text-align:left">Nama Outlet</th>
+                     <th class="ttlcontent" style="width:15%;text-align:left">DRM</th>
+                     <th class="ttlcontent" style="width:25%;text-align:left">AM</th>
+                     <th class="ttlcontent" style="width:25%;text-align:left">QTY</th>
+                      <th class="ttlcontent" style="width:25%;text-align:left">RANK</th>     
+                </tr>
+                {{#each  this.data.listrank }}
+                    <tr>
+                        <td class="content" style="width:5%;">{{{this.no}}}</td>
+                        <td class="content" style="width:30%;">{{{this.OutletName}}}</td>
+                        <td class="content" style="width:15%;">{{{this.drm}}}</td>
+                        <td class="content" style="width:25%;">{{{this.am}}}</td>
+                        <td class="content" style="width:25%;">{{{this.qty}}}</td>
+                        <td class="content" style="width:25%;">{{{this.rank}}}</td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        <br />
+        <br />
+
+        <br />
+        <br />
+      
+        <br />
+        <table>
+            <tbody>
+                 <tr>
+                    <td colspan="2"><br /></td>
+                </tr>
+                <tr> 
+                    <td class="ttlcontent" style="text-align: center;">Print Date:</td>
+                </tr>
+               
+    
+            </tbody>
+        </table>
+    </div>
+    {{/each}}
+</body>
+
+</html>

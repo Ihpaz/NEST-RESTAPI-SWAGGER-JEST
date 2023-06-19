@@ -11,6 +11,7 @@ import { writeFile } from 'fs/promises';
 import { promises } from 'dns';
 import { rejects } from 'assert';
 import { Employee } from './entities/employee.entity';
+import { QueryHelper } from 'src/helpers/query.helper';
 
 @Injectable()
 export class OutletsService {
@@ -22,6 +23,7 @@ export class OutletsService {
     private DistrictRepository: Repository<District>,
     @InjectRepository(Employee)
     private EmployeeRepository: Repository<Employee>,
+    private _queryHelper:QueryHelper,
   ){}
   
  async create(dto: OutletDto) {
@@ -80,13 +82,27 @@ export class OutletsService {
   }
 
 
+  async findOneOutletGoods(id: number) {
+
+    // const data=await this._queryHelper.getOne(`SELECT  o.*,
+    //                                            FROM outlet o 
+    //                                            INNER JOIN goods_outlet go ON o.id=go.OutletId
+    //                                            INNER JOIN goods g ON go.GoodsId=g.id`)
+    const data= await this.OutletRepository.findOne({where:{
+      id:id,}, relations: ['goodsOutlet'] ,
+    })
+
+    if(!data) throw new NotFoundException();
+
+    return data;
+  }
+
  async update(id: number, dto: OutletDto) {
     //throw error when not exist
     const params={};
 
     await this.findOne(id)
     const dtEmpOutlet=await this.findAllEmployee({outletId:id});
-    console.log(dtEmpOutlet,dto.Employee);
 
     params['Am']=dto.Am;
     params['Drm']=dto.Drm;
@@ -118,7 +134,7 @@ export class OutletsService {
    
     const result=  await this.findOne(id)
     return result;
-  }
+ }
 
   async remove(id: number) {
    //throw error when not exist

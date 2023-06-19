@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { FormAnswers } from 'src/form/entities/FormAnswers.entity';
+import { UserRole } from 'src/userrole/entities/userrole.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class User {
@@ -30,5 +32,11 @@ export class User {
   @ApiProperty()
   @UpdateDateColumn()
   updated_at: Date; // Last updated date
+
+  @ManyToOne(() => UserRole, (userrole) => userrole.user)
+  userrole: UserRole
+
+  @OneToMany(() => FormAnswers, (formanswer) => formanswer.user)
+  formanswer: FormAnswers[];
 
 }
