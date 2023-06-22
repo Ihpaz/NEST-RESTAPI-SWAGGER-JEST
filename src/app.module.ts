@@ -13,7 +13,9 @@ import { UserroleController } from './userrole/userrole.controller';
 import { GeneralController } from './general/general.controller';
 import { FormModule } from './form/form.module';
 import { VocModule } from './voc/voc.module';
+import { WhatsappService } from './whatsapp/whatsapp.service';
 import Cryptr from 'cryptr';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 
 @Module({
@@ -26,8 +28,11 @@ import Cryptr from 'cryptr';
     GeneralModule,
     UserroleModule,
     FormModule,
-    VocModule
+    VocModule,
+    WhatsappModule
   ],
+  
+  providers: [WhatsappService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

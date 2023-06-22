@@ -33,10 +33,10 @@ export class VocController {
     return this.vocService.findAllVocNegatif(dto);
   }
 
-  @Get('negatif/:id')
-  findOneVocNegatif(@Param('id') id: number) {
-    return this.vocService.findOne(id);
-  }
+  // @Get('negatif/:id')
+  // findOneVocNegatif(@Param('id') id: number) {
+  //   return this.vocService.findOne(id);
+  // }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateVocDto: UpdateVocDto) {
@@ -116,13 +116,31 @@ export class VocController {
     return this.vocService.getDashboardVocRankByOutlet(dto);
   }
 
-  @Get('download-bt')
+  @Get('url-download-voarank')
+  async generateUrl(@Query() query: any) {
+      try {
+       
+        console.log(query,'queryawl')
+
+          let urln: string = `${Config.get('BASE_URL')}Api/v1/voc/download-voa-rank?`;
+         
+
+          // console.log(params,'param')
+          for(const key in query){
+              urln+=`${key}=${query[key]}&`;
+          }
+          return response('success', urln);
+
+      } catch (error) {
+          return responseError(error.message);
+      }
+  }
+
+  @Get('download-voa-rank')
   async downloadBT(@Req() req: any, @Res() res: any, @Query() query: any) {
       try {
-         
-          const data =[];
-          //  await this.vocService.getRequestForPdf(auth, query);
-          // const buffer = await this._pdfService.generatePDF('epayslip', data);
+
+          const data =  await this.vocService.getRequestVocRankForPdf(query);
           const buffer = await this._pdfService.generatePDFNew('voc-rank', data, { landscape: false });
           const timeNow = dateMoment().format('HHmm');
           const filename = `voc-rank_${timeNow}.pdf`
@@ -134,6 +152,12 @@ export class VocController {
           return responseError(error.message);
       }
   }
+
+  @Post('get-dashboardvoc-bycategory-daytoday/datatable')
+  getDashboardVocBYCategoryDaytoDay(@Body() dto: DatatableDTO) {
+    return this.vocService.getDashboardVocBYCategoryDaytoDay(dto);
+  }
+  
 }
 
 

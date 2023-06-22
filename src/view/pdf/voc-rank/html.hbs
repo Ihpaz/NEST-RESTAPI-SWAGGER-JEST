@@ -20,8 +20,10 @@
 
             table {
                 width: 100%;
-                font-size: 10px;
+                font-size: 8px;
             }
+
+           
 
             td>p {
                 margin: 0;
@@ -40,20 +42,21 @@
             }
 
             .title {
-                font-size: 24px;
+                font-size:12px;
             }
 
             .subtitle {
-                font-size: 18px;
+                font-size: 10px;
                 /* font-weight: 900; */
             }
 
             .content{
-                font-size: 14px;
+                font-size: 8px;
             }
 
              .ttlcontent{
-                font-size: 18px;
+                font-size: 8px;
+                border: 1px solid black;"
             }
         </style>
 </head>
@@ -65,11 +68,24 @@
             <tbody>
                 <tr>
                     <td>
-                        <img class="logo" src="{{ this.logo }}" />
+                        {{!-- <img class="logo" src="{{ this.logo }}" /> --}}
                     </td>
                     <td class="td-right">
                         <p class="title">
-                            Rank VOC Negatif
+                            Rank VOC By Outlet
+                        </p>
+                        
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p class="title">
+                        TypeVoc: {{this.vocFilter}} 
+                        </p>
+                    </td>
+                    <td class="td-right">
+                        <p class="title">
+                           Period : {{this.StartDate}} - {{this.EndDate}} 
                         </p>
                         
                     </td>
@@ -79,29 +95,31 @@
         <br />
         <br />
         <br />
-        <table >
-            <tbody>
-                <tr>
-                    <td class="ttlcontent" colspan="4"><b>Employee List</b></td>
-                </tr>
-                <tr>
-                     <th class="ttlcontent" style="width:5%;text-align:left">No</th>
+        <table style="border: 1px solid black;border-collapse: collapse;">
+            <tbody >
+               
+                <tr style="border: 1px solid black;">
                      <th class="ttlcontent" style="width:30%;text-align:left">Nama Outlet</th>
-                     <th class="ttlcontent" style="width:15%;text-align:left">DRM</th>
+                     <th class="ttlcontent" style="width:25%;text-align:left">DRM</th>
                      <th class="ttlcontent" style="width:25%;text-align:left">AM</th>
-                     <th class="ttlcontent" style="width:25%;text-align:left">QTY</th>
-                      <th class="ttlcontent" style="width:25%;text-align:left">RANK</th>     
+                     <th class="ttlcontent" style="width:15%;text-align:left">QTY</th>
+                      <th class="ttlcontent" style="width:15%;text-align:left">RANK</th>     
                 </tr>
-                {{#each  this.data.listrank }}
-                    <tr>
-                        <td class="content" style="width:5%;">{{{this.no}}}</td>
-                        <td class="content" style="width:30%;">{{{this.OutletName}}}</td>
-                        <td class="content" style="width:15%;">{{{this.drm}}}</td>
-                        <td class="content" style="width:25%;">{{{this.am}}}</td>
-                        <td class="content" style="width:25%;">{{{this.qty}}}</td>
-                        <td class="content" style="width:25%;">{{{this.rank}}}</td>
+                {{#each  this.listrank }}
+                    <tr >
+                        
+                        <td class="content" style="width:30%;border-right: 1px solid black;">{{this.OutletName}}</td>
+                        <td class="content" style="width:25%;border-right: 1px solid black;">{{{this.drm}}}</td>
+                        <td class="content" style="width:25%;border-right: 1px solid black;">{{{this.am}}}</td>
+                        <td class="content" style="width:15%;border-right: 1px solid black;">{{{this.qty}}}</td>
+                        <td class="content" style="width:15%;">{{{this.rank}}}</td>
                     </tr>
                 {{/each}}
+                
+                    <tr style="border: 1px solid black;">
+                          <td class="content td-right" style="width:30%;border-right: 1px solid black;" colspan="3">Total Complaint :</td>
+                          <td class="content" style="width:30%;border-right: 1px solid black;" colspan="2">{{this.jumlahQty}}</td>
+                    </tr>
             </tbody>
         </table>
         <br />
@@ -114,10 +132,11 @@
         <table>
             <tbody>
                  <tr>
-                    <td colspan="2"><br /></td>
+                    <td ><br /></td>
                 </tr>
                 <tr> 
-                    <td class="ttlcontent" style="text-align: center;">Print Date:</td>
+                   
+                     <td class="content" style="width:30%;" >Print Date: {{this.printDate}}</td>
                 </tr>
                
     

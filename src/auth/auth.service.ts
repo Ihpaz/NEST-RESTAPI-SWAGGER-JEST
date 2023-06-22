@@ -63,6 +63,7 @@ export class AuthService {
     }else{
       const payload = { Email: validate.Email,Username: validate.Username, Role:validate.role };
      
+      console.log(payload,'payload')
       return {
         response:"Success",
         status:200,

@@ -52,6 +52,11 @@ export class Voc {
     VocDate: Date;
 
     @ApiProperty()
+    @Column({type:'date',nullable:true})
+    VocDateOnly: Date;
+
+
+    @ApiProperty()
     @Column()
     Category: string;
 

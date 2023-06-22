@@ -5,7 +5,7 @@ import { Workbook } from 'exceljs';
 import { Config } from 'src/helpers/config.helper';
 import { join } from 'path';
 import { DatatableDTO } from 'src/outlet/dto/Outletdatatable.dto';
-import { Equal, LessThan, Like, MoreThanOrEqual, Repository } from 'typeorm';
+import { Any, Equal, LessThan, Like, MoreThanOrEqual, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Voc } from './entities/voc.entity';
 import { QueryHelper } from 'src/helpers/query.helper';
@@ -43,7 +43,6 @@ export class VocService {
     
    try {
     
-    console.log(dto.Voc.length)
     for(const item of dto.Voc){
       
       const voc = new Voc();
@@ -87,8 +86,7 @@ export class VocService {
       return true;
     } catch (error) {
         await queryRunner.rollbackTransaction();
-        // console.log(voc,'1')
-        // console.log(vocn,'2')
+     
         throw new Error(error.message);
     } finally {
         await queryRunner.release();
@@ -102,6 +100,7 @@ export class VocService {
     const skip=dto.skip  && +dto.skip >= 0  ? dto.skip   : 0;
 
     const newObj ={}
+    if(dto.orderBy.field=='Voc_Date') dto.orderBy.field='VocDateOnly';
     if(dto.orderBy.field)  newObj[dto.orderBy.field] = dto.orderBy.value;
    
     param['take']=limit;
@@ -114,13 +113,19 @@ export class VocService {
        
       if(dt){
         const newObj ={}
-        newObj[dt.field] =Like(`%${dt.value}%`);
+        if(dt.field.includes('Date')){
+          if(dt.field=='Voc_Date') dt.field='VocDateOnly';
+          const dtDate= dateMoment(dt.value).format('YYYY-MM-DD')
+          newObj[dt.field] = Equal(dtDate);
+        }else{
+          newObj[dt.field] =Like(`%${dt.value}%`);
+        }
         param['where'].push(newObj);
       }
     }
-  
+
     const [data, total]= await this.VocRepository.findAndCount(param);
-    
+   
     for(const dt of data){
 
       if(dt['VocDate'])   dt['Voc_Date'] =dateMoment(dt['VocDate'].toString()).format('YYYY-MM-DD HH:mm');
@@ -135,17 +140,7 @@ export class VocService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} voc`;
-  }
 
-  update(id: number, updateVocDto: UpdateVocDto) {
-    return `This action updates a #${id} voc`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} voc`;
-  }
 
   async downloadTemplateVOC(){
     // const data= await this.findAllGoods({where:{GoodsType:'ASSET'}})
@@ -376,8 +371,8 @@ export class VocService {
 
       await this.VocNegatifRepository.update({id:id},params)
 
-      const result=  await this.findOne(id)
-      return result;
+   
+      return true;
     } catch (error) {
       throw new Error(error.message);
     }
@@ -485,7 +480,7 @@ export class VocService {
           month(vn.VocDate) as Bulan,
           IFNULL(COUNT(vn.CategoryComplaint),0) as jumlahComplain
         from
-        voc_negatif_category vnc 
+        (select Category from voc_negatif_category group by Category) vnc 
         left join (select * from voc_negatif where VocDate  between :StartDate and :EndDate) vn  
           on vnc.Category = vn.CategoryComplaint 
         WHERE 1=1  ${additionalWhere}
@@ -535,7 +530,7 @@ export class VocService {
 
   async getDashboardVocRankByOutlet(dto:DatatableDTO){
     try {
-      
+     
 
       const limit=dto.limit  && +dto.limit > 0  ? dto.limit   : 10;
       const skip=dto.skip  && +dto.skip >= 0  ? dto.skip   : 0;
@@ -561,16 +556,318 @@ export class VocService {
           group by o.OutletName
           ${orderBy}
       `,{
-        StartDate:dto.data.StartDate,
-        EndDate:dto.data.EndDate,
+        StartDate:dateMoment(dto.data.StartDate).toDate(),
+        EndDate:dateMoment(dto.data.EndDate).toDate(),
         ofield:dto.orderBy.field,
         ovalue:dto.orderBy.value,
         Code:dto.data.TypeVoc
       });
 
+    
    
       const total = await this._queryHelper.getOne(`
           SELECT COUNT(OutletName) AS total FROM outlet
+      `);
+
+      return {
+        data: result,
+        total: +total.total,
+        limit: +limit,
+        skip: +skip
+      };
+
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getRequestVocRankForPdf(dto: any){
+    try {
+      let data: object={};
+      let orderBy: object={}
+      let filter: any[]=[]
+      for(let key in dto){
+          if(key.includes('data')){
+             data[key.replace('data','')] = dto[key]
+          }
+
+          if(key.includes('orderBy')){
+            orderBy['field'] =dto.orderByfield;
+            orderBy['value'] =dto.orderByvalue;
+          }
+
+          if(key.includes('filter')){
+            let filterDt: object={};
+            filterDt['field'] =key.replace('filter','');
+            filterDt['value'] =dto[key];
+            filter.push(filterDt);
+          }
+
+      }
+      const dtoDatatable : any = {
+        limit: +dto.limit,
+        skip: +dto.skip,
+        orderBy: orderBy,
+        filter:filter,
+        data:data
+      };
+      
+     
+      const rawData = await this.getDashboardVocRankByOutlet(dtoDatatable)
+      const listData: any[] =[];
+      let vocFilter: string='All';
+
+      if(data['TypeVoc']){
+        vocFilter=data['TypeVoc'];
+      }
+     
+      let jumlahQty:number=0;
+      for(const item of rawData.data){
+        jumlahQty=(jumlahQty+parseInt(item.qty));
+      }
+
+      listData.push({
+        title:'Rank Voc',
+        listrank:rawData.data,
+        StartDate:dateMoment(data['StartDate']).format('YYYY-MM-DD'),
+        EndDate:dateMoment(data['EndDate']).format('YYYY-MM-DD'),
+        vocFilter:vocFilter,
+        jumlahQty:jumlahQty,
+        printDate:dateMoment().format('YYYY-MM-DD HH:mm')
+      });
+
+      const result : any[]=[];
+      result['data'] = listData;
+
+    
+
+      return result;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getDashboardVocBYCategoryDaytoDay(dto:DatatableDTO){
+    try {
+     
+
+      const limit=dto.limit  && +dto.limit > 0  ? dto.limit   : 10;
+      const skip=dto.skip  && +dto.skip >= 0  ? dto.skip   : 0;
+
+      let orderBy: string='order by rank';
+
+      if(dto.orderBy.field) orderBy=`order by ${dto.orderBy.field} ${dto.orderBy.value}`;
+
+      const result = await this._queryHelper.getMany(`
+          select 
+            vnc.Category ,
+            vnc.Title,
+            vnc.Code,
+            vnc.Problem,
+            case 
+                when DAY(vn.VocDate) = 1 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '1',
+            case 
+                when DAY(vn.VocDate) = 2 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '2',
+            case 
+                when DAY(vn.VocDate) = 3 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '3',
+            case 
+                when DAY(vn.VocDate) = 4 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '4',
+            case 
+                when DAY(vn.VocDate) = 5 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '5',
+            case 
+                when DAY(vn.VocDate) = 6 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '6',
+            case 
+                when DAY(vn.VocDate) = 7 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '7',
+            case 
+                when DAY(vn.VocDate) = 8 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '8',
+            case 
+                when DAY(vn.VocDate) = 9 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '9',
+            case 
+                when DAY(vn.VocDate) = 10 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '10',
+            case 
+                when DAY(vn.VocDate) = 11 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '11',
+            case 
+                when DAY(vn.VocDate) = 12 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '12',
+            case 
+                when DAY(vn.VocDate) = 13 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '13',
+            case 
+                when DAY(vn.VocDate) = 14 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '14',
+            case 
+                when DAY(vn.VocDate) = 15 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '15',
+            case 
+                when DAY(vn.VocDate) = 16 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '16',
+            case 
+                when DAY(vn.VocDate) = 17 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '17',
+            case 
+                when DAY(vn.VocDate) = 18 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '18',
+            case 
+                when DAY(vn.VocDate) = 19 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '19',
+            case 
+                when DAY(vn.VocDate) = 20 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '20',
+            case 
+                when DAY(vn.VocDate) = 21 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '21',
+            case 
+                when DAY(vn.VocDate) = 22 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '22',
+            case 
+                when DAY(vn.VocDate) = 23 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '23',
+            case 
+                when DAY(vn.VocDate) = 24 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '24',
+            case 
+                when DAY(vn.VocDate) = 25 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '25',
+            case 
+                when DAY(vn.VocDate) = 26 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '26',
+            case 
+                when DAY(vn.VocDate) = 27 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '27',
+            case 
+                when DAY(vn.VocDate) = 28 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '28',
+            case 
+                when DAY(vn.VocDate) = 29 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '29',
+            case 
+                when DAY(vn.VocDate) = 30 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '30',
+            case 
+                when DAY(vn.VocDate) = 31 then
+                IFNULL(count(vn.id),0)
+                else
+                0
+            end as  '31'
+          from
+          voc_negatif_category vnc 
+          left join (select * from voc_negatif where year(VocDate) = :Year and month(VocDate)=:Month ) vn  
+            on vnc.Code = vn.SubCategoryComplaint 
+          WHERE 1=1  and vn.SubCategoryComplaint is not null 
+          group by vn.VocDateOnly,vn.SubCategoryComplaint
+          ${orderBy}
+        `,{
+          Year: dto.data.Year,
+          Month:dto.data.Month,
+          ofield:dto.orderBy.field,
+          ovalue:dto.orderBy.value,
+        });
+
+    
+   
+      const total = await this._queryHelper.getOne(`
+          SELECT COUNT(OutletName) AS total FROM voc_negatif_category
       `);
 
       return {

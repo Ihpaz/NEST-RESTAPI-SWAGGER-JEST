@@ -1,0 +1,4 @@
+2023/06/21-14:33:06.270 55f0 Creating DB D:\Ihpaz\project\backend-operation\.wwebjs_auth\session\Default\File System\Origins since it was missing.
+2023/06/21-14:33:06.273 55f0 Reusing MANIFEST D:\Ihpaz\project\backend-operation\.wwebjs_auth\session\Default\File System\Origins/MANIFEST-000001
+2023/06/21-14:33:06.274 55f0 Recovering log #3
+2023/06/21-14:33:06.274 55f0 Reusing old log D:\Ihpaz\project\backend-operation\.wwebjs_auth\session\Default\File System\Origins/000003.log 
